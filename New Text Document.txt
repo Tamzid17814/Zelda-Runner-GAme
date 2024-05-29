@@ -1,0 +1,288 @@
+import random
+
+import pygame
+from sys import exit
+from random import randint ,choice
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        player_walk_one = pygame.image.load('dragon.png').convert_alpha()
+        player_walk_two = pygame.image.load('dragon 1.png').convert_alpha()
+        self.player_walk = [player_walk_one, player_walk_two]
+        self.player_index = 0
+        self.player_jump = pygame.image.load('dragon (5).png').convert_alpha()
+
+        self.image=self.player_walk[self.player_index]
+        self.rect=self.image.get_rect(center=(250,379))
+        self.gravity=0
+
+
+    def player_input(self):
+        keys=pygame.key.get_pressed()
+        if keys[pygame.K_SPACE] and self.rect.bottom>=408:
+            self.gravity=-2.7
+            
+    def apply_gravity(self):
+        self.gravity+=0.0190000
+        self.rect.y+=self.gravity
+        if self.rect.bottom>=408:
+            self.rect.bottom=408
+
+    def player_Animation_state(self):
+        if  self.rect.bottom <408:
+            self.image=self.player_jump
+
+        else:
+            self.player_index += 0.01
+            if self.player_index > len(self.player_walk): self.player_index = 0
+            self.image = self.player_walk[int(self.player_index)]
+
+    def update(self):
+        self.player_input()
+        self.apply_gravity()
+        self.player_Animation_state()
+
+class Obstackle(pygame.sprite.Sprite):
+    def __init__(self,type):
+        super().__init__()
+        if type=='fly':
+            fly_image1 = pygame.image.load('dragon (6).png').convert_alpha()
+            fly_image2 = pygame.image.load('dragon (6).png').convert_alpha()
+            self.frames = [fly_image1, fly_image2]
+            y_position=350
+        else:
+            snail_image1 = pygame.image.load('stegosaurus.png').convert_alpha()
+            snail_image2 = pygame.image.load('stegosaurus.png').convert_alpha()
+            self.frames = [snail_image1, snail_image2]
+            y_position=415
+
+
+
+        self.animtion_index=0
+        self.image=self.frames[self.animtion_index]
+        self.rect=self.image.get_rect(midbottom=(random.randint(900,1200),y_position))
+
+    def animation_state(self):
+        self.animtion_index+=0.1
+        if self.animtion_index>=len(self.frames):self.animtion_index = 0
+        self.image=self.frames[int(self.animtion_index)]
+
+    def update(self):
+        self.animation_state()
+        self.rect.x-= 1.75
+        self.destroy()
+
+    def collistion_sprite(self):
+        if pygame.sprite.spritecollide(player.sprite,obstackle,False):
+            return False
+        else:return True
+
+    def destroy(self):
+        if self.rect.x<=-100:
+            self.kill()
+
+def display_score():
+    current_time = int(pygame.time.get_ticks() / 1000) - start_time
+    current_suface = test_font.render(f'Score : {current_time}', False, '#006600')
+    score_rect = current_suface.get_rect(center=(400, 50))
+    screen.blit(current_suface, score_rect)
+    return current_time
+
+
+def obstackle_movement(obstacle_list):
+    if obstacle_list:
+        for obstackle_rect in obstacle_list:
+            obstackle_rect.x -= 1.75
+            if obstackle_rect.bottom == 350:
+                screen.blit(fly_surf, obstackle_rect)
+            else:
+                screen.blit(snail_image, obstackle_rect)
+        obstacle_list = [obstacle for obstacle in obstacle_list if obstacle.x > -100]
+
+        return obstacle_list
+    else:
+        return []
+
+
+def player_animation():
+    global player_surface, player_index
+    if player_rectangle.bottom < 345:
+        player_surface = player_jump
+    else:
+        player_index += 0.01
+        if player_index > len(player_walk): player_index = 0
+        player_surface = player_walk[int(player_index)]
+
+
+def collistion_sprite():
+    if pygame.sprite.spritecollide(player.sprite,obstackle,False):
+        obstackle.empty()
+        return False
+    else:return True
+
+
+
+pygame.init()
+game_active = False
+Width = 800
+Height = 500
+running = True
+start_time = 0
+score = 0
+clock = pygame.time.Clock()
+screen = pygame.display.set_mode((Width, Height))
+test_font = pygame.font.Font(None, 50)
+
+pygame.display.set_caption('Runner')
+sky_surface = pygame.image.load('pngtree-nature-animated-blue-sky-clouds-picture-image_2448754.png').convert()
+ground_surface = pygame.image.load('gr.png').convert()
+#Group
+player=pygame.sprite.GroupSingle()
+player.add(Player())
+
+obstackle=pygame.sprite.Group()
+# Obstackles
+snail_image1 = pygame.image.load('stegosaurus.png').convert_alpha()
+snail_image2 = pygame.image.load('stegosaurus.png').convert_alpha()
+snail_image_list = [snail_image1, snail_image2]
+snail_image_index = 0
+snail_image = snail_image_list[snail_image_index]
+
+fly_image1 = pygame.image.load('dragon (6).png').convert_alpha()
+fly_image2 = pygame.image.load('dragon (6).png').convert_alpha()
+fly_frames = [fly_image1, fly_image2]
+fly_frame_index = 0
+fly_surf = fly_frames[fly_frame_index]
+
+obstackle_rect_list = []
+
+player_walk_one = pygame.image.load('dragon.png').convert_alpha()
+player_walk_two = pygame.image.load('dragon 1.png').convert_alpha()
+player_walk = [player_walk_one, player_walk_two]
+player_index = 0
+player_jump = pygame.image.load('dragon (5).png').convert_alpha()
+
+player_surface = player_walk[player_index]
+player_rectangle = player_surface.get_rect(center=(250, 345))
+
+player_gravity = 0
+player_stand = pygame.image.load('dragon (2).png').convert_alpha()
+# player_stand=pygame.transform.scale(player_stand,(234,234))
+player_stand_rectangle = player_stand.get_rect(center=(400, 250))
+
+Game_name = test_font.render('Dragon Runner', True, '#006600')
+Game_name_rect = Game_name.get_rect(center=(400, 50))
+
+Game_massage = test_font.render('Press space bar to start the game', True, '#006600')
+Game_massage_rect = Game_massage.get_rect(center=(400, 460))
+
+obstackle_timer = pygame.USEREVENT + 1
+pygame.time.set_timer(obstackle_timer, 1000)
+
+snail_animation_timer = pygame.USEREVENT + 2
+pygame.time.set_timer(snail_animation_timer, 700)
+
+fly_animation_timer = pygame.USEREVENT + 3
+pygame.time.set_timer(fly_animation_timer, 400)
+
+# score_surface = test_font.render('score', True, '#006600')
+# score_rectangle = score_surface.get_rect(center=(400, 50))
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+            exit()
+
+        if game_active:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE :
+                    if event.type==pygame.FINGERDOWN:
+                      if player_rectangle.bottom >= 408:
+                        player_gravity = -2.7
+        else:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE or event.type==pygame.FINGERDOWN:
+                game_active = True
+
+                start_time = int(pygame.time.get_ticks() / 1000)
+        if game_active:
+            if event.type == obstackle_timer:
+                obstackle.add(Obstackle(choice(['fly','snail'])))
+                """if randint(0, 2):
+                    obstackle_rect_list.append(snail_image.get_rect(bottomright=(randint(900, 1200), 415)))
+                else:
+                    obstackle_rect_list.append(fly_surf.get_rect(bottomright=(randint(900, 1200), 350)))"""
+
+            if event.type == snail_animation_timer:
+                if snail_image_index ==0:snail_image_index=1
+                else:snail_image_index=0
+                snail_image=snail_image_list[snail_image_index]
+
+            if event.type == fly_animation_timer:
+                if fly_frame_index == 0:
+                    fly_frame_index = 1
+                else:
+                    fly_frame_index = 0
+                fly_surf = fly_frames[fly_frame_index]
+
+
+    if game_active:
+        screen.blit(sky_surface, (0, 0))
+
+        # Ground image
+        screen.blit(ground_surface, (-5, 405))
+
+        # pygame.draw.rect(screen, 'White', score_rectangle, 9)
+        # pygame.draw.rect(screen, 'White', score_rectangle)
+
+        # Text img
+        # screen.blit(score_surface, score_rectangle)
+
+        # snail img
+        # screen.blit(snail_image, snail_rectangle)
+        # snail_rectangle.x -= 1
+        # if snail_rectangle.right <= -100:
+        #    snail_rectangle.left = 1000
+
+        # obstackle movement
+      #  obstackle_rect_list = obstackle_movement(obstackle_rect_list)
+
+      #  game_active = collisions(player_rectangle, obstackle_rect_list)
+        game_active=collistion_sprite()
+
+        # key=pygame.key.get_pressed()
+        # if key[pygame.K_SPACE]:
+        #   player_rectangle.y-=3
+
+        # player
+        #player_animation()
+        #screen.blit(player_surface, player_rectangle)
+
+        player.draw(screen)
+        player.update()
+
+        obstackle.draw(screen)
+        obstackle.update()
+
+       # player_gravity += 0.0190000
+      #  player_rectangle.y += player_gravity
+       # if player_rectangle.bottom >= 408: player_rectangle.bottom = 408
+
+        score = display_score()
+
+    else:
+        screen.fill('white')
+        screen.blit(player_stand, player_stand_rectangle)
+        obstackle_rect_list.clear()
+        player_rectangle.midbottom = (250, 345)
+        player_gravity = 0
+        score_message = test_font.render(f'Your score : {score}', True, '#006600')
+        score_message_rect = score_message.get_rect(center=(370, 410))
+        screen.blit(score_message, score_message_rect)
+        screen.blit(Game_name, Game_name_rect)
+        screen.blit(Game_massage, Game_massage_rect)
+
+    pygame.display.update()
+    clock.tick(340)
+
